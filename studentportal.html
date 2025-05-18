@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Portal</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f8ff;
+      text-align: center;
+      padding: 30px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 8px;
+      width: 250px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #results, #portal {
+      display: none;
+      margin-top: 30px;
+    }
+
+    .student-box {
+      background-color: #e0ffe0;
+      padding: 15px;
+      margin: 15px auto;
+      width: 60%;
+      border-radius: 10px;
+      border: 1px solid #aaa;
+      text-align: left;
+    }
+
+    #error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Login Form -->
+  <div id="loginForm">
+    <h2>Login to Student Portal</h2>
+    <input type="text" id="username" placeholder="Username"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+    <p id="error"></p>
+  </div>
+
+  <!-- Student Portal -->
+  <div id="portal">
+    <h1>Student Result Portal</h1>
+    <input type="text" id="name" placeholder="Enter your name"><br>
+    <input type="text" id="course" placeholder="Enter your course"><br>
+    <input type="number" id="classScore" placeholder="Class Score (out of 30)"><br>
+    <input type="number" id="midScore" placeholder="Mid-Sem Score (out of 20)"><br>
+    <input type="number" id="examScore" placeholder="Exam Score (out of 50)"><br> 
+    
+    <button onclick="calculateResult()">Add Student Result</button>
+
+    <div id="results">
+      <h2>All Student Results</h2>
+    </div>
+  </div>
+
+  <script>
+    const validUsername = "student";
+    const validPassword = "portal123";
+
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      if (username === validUsername && password === validPassword) {
+        document.getElementById('loginForm').style.display = "none";
+        document.getElementById('portal').style.display = "block";
+      } else {
+        document.getElementById('error').innerText = "Invalid username or password.";
+      }
+    }
+
+    function calculateResult() {
+      const name = document.getElementById('name').value;
+      const course = document.getElementById('course').value;
+      const classScore = parseFloat(document.getElementById('classScore').value);
+      const midScore = parseFloat(document.getElementById('midScore').value);
+      const examScore = parseFloat(document.getElementById('examScore').value);
+
+      if (!name || !course || isNaN(classScore) || isNaN(midScore) || isNaN(examScore)) {
+        alert("Please complete all fields.");
+        return;
+      }
+
+      const total = classScore + midScore + examScore;
+
+      let grade;
+      if (total >= 80) grade = 'A';
+      else if (total >= 70) grade = 'B';
+      else if (total >= 60) grade = 'C';
+      else if (total >= 50) grade = 'D';
+      else grade = 'F';
+      
+      let TGP;
+      if (total >= 80) TGP = '12.0';
+      else if (total >= 70) TGP = '11.0';
+      else if (total >= 60) TGP = '10.0';
+      else if (total >= 50) TGP = '9.0';
+      else TGP = '8.0';
+
+      const GPA = (TGP / 4).toFixed(2);
+
+      const studentResult = document.createElement('div');
+      studentResult.className = 'student-box';
+      studentResult.innerHTML = `
+        <strong>Name:</strong> ${name}<br>
+        <strong>Course:</strong> ${course}<br>
+        <strong>Total Score:</strong> ${total}/100<br>
+        <strong>Grade:</strong> ${grade}<br>
+        <strong>GPA:</strong> ${GPA}
+      `;
+
+      document.getElementById('results').appendChild(studentResult);
+      document.getElementById('results').style.display = 'block';
+
+      // Clear inputs
+      document.querySelectorAll('#portal input').forEach(input => input.value = '');
+    }
+  </script>
+
+</body>
+</html>
