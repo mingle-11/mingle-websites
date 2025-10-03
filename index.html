@@ -1,141 +1,677 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Student Portal</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Koffman Construction Management</title>
   <style>
+    :root {
+      --accent: #d32f2f; /* Koffman red */
+      --accent-700: #b71c1c;
+      --surface: #f8fafc;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --menu-width: 280px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f0f8ff;
-      text-align: center;
-      padding: 30px;
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: var(--surface);
+      color: var(--text);
     }
 
-    input, button {
-      padding: 10px;
-      margin: 8px;
-      width: 250px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
+    a { color: inherit; }
+
+    .app { min-height: 100%; }
+
+    /* Drawer */
+    nav.drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--menu-width);
+      height: 100%;
+      background: #fff;
+      border-right: 1px solid var(--border);
+      transform: translateX(-100%);
+      transition: transform 240ms ease;
+      z-index: 1000;
+    }
+    nav.drawer.open { transform: translateX(0); }
+
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: var(--accent);
+      color: #fff;
+    }
+    .brand-logo {
+      width: 36px; height: 36px; border-radius: 8px; background: #fff; color: var(--accent); font-weight: 800; display: grid; place-items: center;
+    }
+    .brand-title { font-weight: 800; }
+    .brand-sub { font-size: .8rem; opacity: .9; }
+
+    .drawer-links { padding: 8px; }
+    .drawer-links a {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px; border-radius: 10px; text-decoration: none; color: #111827; font-weight: 600;
+    }
+    .drawer-links a:hover { background: #fde7e7; color: var(--accent); }
+    .drawer-links a.active { background: #fde7e7; color: var(--accent); }
+
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.25);
+      opacity: 0; pointer-events: none; transition: opacity 200ms ease; z-index: 999;
+    }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+
+    /* Topbar */
+    header.topbar {
+      position: sticky; top: 0; z-index: 500;
+      display: flex; align-items: center; gap: 12px;
+      background: #fff; border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
     }
 
-    button {
-      background-color: #4CAF50;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
+    .menu-btn {
+      background: var(--accent); color: #fff; border: none; padding: 10px 12px; border-radius: 10px; font-weight: 700; cursor: pointer;
     }
 
-    #results, #portal {
-      display: none;
-      margin-top: 30px;
+    .title { font-weight: 800; }
+    .muted { color: var(--muted); }
+    .spacer { flex: 1; }
+
+    .search input {
+      padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; min-width: 220px;
     }
 
-    .student-box {
-      background-color: #e0ffe0;
-      padding: 15px;
-      margin: 15px auto;
-      width: 60%;
-      border-radius: 10px;
-      border: 1px solid #aaa;
-      text-align: left;
+    /* Content */
+    .content { max-width: 1100px; margin: 16px auto; padding: 0 16px; }
+
+    .cards {
+      display: grid; gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     }
 
-    #error {
-      color: red;
+    .card {
+      background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 16px;
+    }
+
+    .title-xl { font-size: 1.25rem; font-weight: 800; }
+
+    /* Buttons */
+    .btn { border: none; border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 700; }
+    .btn[disabled] { opacity: .6; cursor: not-allowed; }
+    .btn.primary { background: var(--accent); color: #fff; }
+    .btn.ghost { background: #fff; border: 1px solid var(--border); }
+    .btn.small { padding: 6px 10px; font-size: .9rem; border-radius: 8px; }
+    a.btn { display: inline-block; text-decoration: none; }
+
+    /* Forms */
+    .form { display: grid; gap: 12px; }
+    .form label { font-weight: 700; }
+    .form input, .form select, .form textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; font: inherit;
+      background: #fff; color: var(--text);
+    }
+
+    .row { display: grid; gap: 12px; }
+    .row.cols-2 { grid-template-columns: 1fr 1fr; }
+
+    /* Table */
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+
+    /* Badges */
+    .badge { display: inline-block; background: #fde7e7; color: var(--accent); padding: 2px 10px; border-radius: 999px; font-weight: 700; font-size: .85rem; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 20px; right: 20px; background: #111827; color: #fff; padding: 10px 12px; border-radius: 10px; opacity: 0; transform: translateY(12px); transition: all 200ms ease; z-index: 2000; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* Dialog */
+    dialog { border: none; border-radius: 12px; padding: 16px; width: min(520px, 95vw); }
+    dialog::backdrop { background: rgba(0,0,0,.35); }
+
+    /* Responsive drawer on desktop */
+    @media (min-width: 1024px) {
+      nav.drawer { transform: translateX(0); }
+      .overlay { display: none; }
+      header.topbar { margin-left: var(--menu-width); }
+      .content { margin-left: calc(var(--menu-width) + 16px); }
     }
   </style>
 </head>
 <body>
+  <div class="app">
+    <nav class="drawer" id="drawer">
+      <div class="drawer-header">
+        <div class="brand-logo">K</div>
+        <div>
+          <div class="brand-title">Koffman</div>
+          <div class="brand-sub">Construction</div>
+        </div>
+      </div>
+      <div class="drawer-links">
+        <a href="#/dashboard" class="nav-link" data-route="dashboard">🏠 Dashboard</a>
+        <a href="#/clients" class="nav-link" data-route="clients">👥 Clients</a>
+        <a href="#/projects" class="nav-link" data-route="projects">🏗️ Projects</a>
+        <a href="#/settings" class="nav-link" data-route="settings">⚙️ Settings</a>
+      </div>
+    </nav>
+    <div class="overlay" id="overlay"></div>
 
-  <!-- Login Form -->
-  <div id="loginForm">
-    <h2>Login to Student Portal</h2>
-    <input type="text" id="username" placeholder="Username"><br>
-    <input type="password" id="password" placeholder="Password"><br>
-    <button onclick="login()">Login</button>
-    <p id="error"></p>
+    <main style="min-height: 100vh;">
+      <header class="topbar">
+        <button class="menu-btn" id="menuBtn">☰</button>
+        <div class="title" id="appTitle">Koffman Investment Limited</div>
+        <div class="spacer"></div>
+        <div class="search" id="globalSearchContainer" hidden>
+          <input id="globalSearch" placeholder="Search clients or projects" />
+        </div>
+      </header>
+
+      <div class="content">
+        <section id="view-dashboard" class="view"></section>
+        <section id="view-clients" class="view" hidden></section>
+        <section id="view-projects" class="view" hidden></section>
+        <section id="view-settings" class="view" hidden></section>
+      </div>
+    </main>
   </div>
-
-  <!-- Student Portal -->
-  <div id="portal">
-    <h1>Student Result Portal</h1>
-    <input type="text" id="name" placeholder="Enter your name"><br>
-    <input type="text" id="course" placeholder="Enter your course"><br>
-    <input type="number" id="classScore" placeholder="Class Score (out of 30)"><br>
-    <input type="number" id="midScore" placeholder="Mid-Sem Score (out of 20)"><br>
-    <input type="number" id="examScore" placeholder="Exam Score (out of 50)"><br> 
-    
-    <button onclick="calculateResult()">Add Student Result</button>
-
-    <div id="results">
-      <h2>All Student Results</h2>
-    </div>
-  </div>
+  <div class="toast" id="toast"></div>
 
   <script>
-    const validUsername = "student";
-    const validPassword = "portal123";
+    // ---------------------- Storage & App State ----------------------
+    const STORAGE_VERSION = 1;
+    const STORAGE_KEY = 'koffman-cms:v' + STORAGE_VERSION;
+    const DEFAULT_DATA = {
+      settings: { companyName: 'Koffman Investment Limited', accent: '#d32f2f', showWeeks: true },
+      clients: [],
+      projects: []
+    };
 
-    function login() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-
-      if (username === validUsername && password === validPassword) {
-        document.getElementById('loginForm').style.display = "none";
-        document.getElementById('portal').style.display = "block";
-      } else {
-        document.getElementById('error').innerText = "Invalid username or password.";
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return structuredClone(DEFAULT_DATA);
+        const parsed = JSON.parse(raw);
+        return { ...structuredClone(DEFAULT_DATA), ...parsed, settings: { ...DEFAULT_DATA.settings, ...parsed.settings } };
+      } catch (e) {
+        console.error('Failed to read storage', e);
+        return structuredClone(DEFAULT_DATA);
       }
     }
 
-    function calculateResult() {
-      const name = document.getElementById('name').value;
-      const course = document.getElementById('course').value;
-      const classScore = parseFloat(document.getElementById('classScore').value);
-      const midScore = parseFloat(document.getElementById('midScore').value);
-      const examScore = parseFloat(document.getElementById('examScore').value);
+    function saveData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
 
-      if (!name || !course || isNaN(classScore) || isNaN(midScore) || isNaN(examScore)) {
-        alert("Please complete all fields.");
-        return;
+    function uid() { return 'id-' + Math.random().toString(36).slice(2, 10); }
+
+    function toast(message) {
+      const el = document.getElementById('toast');
+      el.textContent = message;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2200);
+    }
+
+    let state = loadData();
+
+    function applyTheme() {
+      document.documentElement.style.setProperty('--accent', state.settings.accent || '#d32f2f');
+      const title = document.getElementById('appTitle');
+      if (title) title.textContent = state.settings.companyName || 'Koffman Investment Limited';
+    }
+    applyTheme();
+
+    // ---------------------- Router ----------------------
+    function showView(id) {
+      document.querySelectorAll('.view').forEach(v => v.hidden = true);
+      const el = document.getElementById('view-' + id);
+      if (el) el.hidden = false;
+      document.querySelectorAll('.nav-link').forEach(a => {
+        a.classList.toggle('active', a.getAttribute('data-route') === id);
+      });
+      document.getElementById('globalSearchContainer').hidden = !(id === 'clients' || id === 'projects');
+    }
+
+    function navigate() {
+      const hash = location.hash.replace(/^#\/?/, '');
+      const [route, param] = hash.split('/');
+      if (!route || route === 'dashboard') {
+        renderDashboard();
+        showView('dashboard');
+      } else if (route === 'clients') {
+        renderClients();
+        showView('clients');
+      } else if (route === 'projects') {
+        renderProjects();
+        showView('projects');
+      } else if (route === 'settings') {
+        renderSettings();
+        showView('settings');
+      } else if (route === 'client' && param) {
+        renderClientProfile(param);
+        showView('clients');
+      } else {
+        location.hash = '#/dashboard';
       }
+    }
 
-      const total = classScore + midScore + examScore;
+    window.addEventListener('hashchange', navigate);
+    window.addEventListener('load', () => {
+      if (!location.hash) location.hash = '#/dashboard';
+      // Seed example if first run
+      if (state.clients.length === 0 && state.projects.length === 0) {
+        const c1 = { id: uid(), name: 'Acme Holdings', email: 'contact@acme.com', phone: '+233 555 111', address: 'Airport Rd, Accra', note: '' };
+        state.clients.push(c1);
+        const p1 = { id: uid(), name: 'Mall Renovation', clientId: c1.id, location: 'Accra, Ghana', startDate: todayOffset(-14), endDate: todayOffset(60) };
+        state.projects.push(p1);
+        saveData(state);
+      }
+      navigate();
+    });
 
-      let grade;
-      if (total >= 80) grade = 'A';
-      else if (total >= 70) grade = 'B';
-      else if (total >= 60) grade = 'C';
-      else if (total >= 50) grade = 'D';
-      else grade = 'F';
-      
-      let TGP;
-      if (total >= 80) TGP = '12.0';
-      else if (total >= 70) TGP = '11.0';
-      else if (total >= 60) TGP = '10.0';
-      else if (total >= 50) TGP = '9.0';
-      else TGP = '8.0';
+    function todayOffset(deltaDays) {
+      const d = new Date();
+      d.setDate(d.getDate() + (deltaDays || 0));
+      return d.toISOString().slice(0,10);
+    }
 
-      const GPA = (TGP / 4).toFixed(2);
+    // ---------------------- Drawer ----------------------
+    const drawer = document.getElementById('drawer');
+    const overlay = document.getElementById('overlay');
+    document.getElementById('menuBtn').addEventListener('click', () => {
+      drawer.classList.toggle('open');
+      overlay.classList.toggle('show');
+    });
+    overlay.addEventListener('click', () => {
+      drawer.classList.remove('open');
+      overlay.classList.remove('show');
+    });
+    document.querySelectorAll('.nav-link').forEach(a => a.addEventListener('click', () => {
+      drawer.classList.remove('open');
+      overlay.classList.remove('show');
+    }));
 
-      const studentResult = document.createElement('div');
-      studentResult.className = 'student-box';
-      studentResult.innerHTML = `
-        <strong>Name:</strong> ${name}<br>
-        <strong>Course:</strong> ${course}<br>
-        <strong>Total Score:</strong> ${total}/100<br>
-        <strong>Grade:</strong> ${grade}<br>
-        <strong>GPA:</strong> ${GPA}
+    // ---------------------- Helpers ----------------------
+    function getClientById(id) { return state.clients.find(c => c.id === id); }
+    function getClientProjects(clientId) { return state.projects.filter(p => p.clientId === clientId); }
+    function humanDuration(startDate, endDate) {
+      if (!startDate || !endDate) return '';
+      const ms = Math.abs(new Date(endDate) - new Date(startDate));
+      const days = Math.ceil(ms / (1000*60*60*24));
+      if (state.settings.showWeeks) {
+        const weeks = (days/7).toFixed(1);
+        return `${days} days (${weeks} wks)`;
+      }
+      return `${days} days`;
+    }
+
+    // ---------------------- Dashboard ----------------------
+    function renderDashboard() {
+      const el = document.getElementById('view-dashboard');
+      const activeProjects = state.projects.length;
+      const numClients = state.clients.length;
+      const upcoming = [...state.projects].sort((a,b) => new Date(a.startDate) - new Date(b.startDate)).slice(0,5);
+      el.innerHTML = `
+        <div class="cards">
+          <div class="card">
+            <div class="title-xl">Clients</div>
+            <div style="font-size:2rem; font-weight:800; color: var(--accent)">${numClients}</div>
+            <div><a class="btn ghost" href="#/clients">Manage clients</a></div>
+          </div>
+          <div class="card">
+            <div class="title-xl">Projects</div>
+            <div style="font-size:2rem; font-weight:800; color: var(--accent)">${activeProjects}</div>
+            <div><a class="btn ghost" href="#/projects">Manage projects</a></div>
+          </div>
+          <div class="card">
+            <div class="title-xl">Upcoming</div>
+            ${upcoming.map(p => `
+              <div style="margin:8px 0; display:flex; justify-content:space-between">
+                <div>${p.name}</div>
+                <div class="badge">${p.startDate}</div>
+              </div>`).join('') || '<div>No upcoming projects</div>'}
+          </div>
+        </div>
+      `;
+    }
+
+    // ---------------------- Clients ----------------------
+    function renderClients() {
+      const el = document.getElementById('view-clients');
+      el.innerHTML = `
+        <div style="display:flex; gap:12px; align-items:center; margin-bottom:12px">
+          <button class="btn primary" id="btnAddClient">Add Client</button>
+          <input id="clientSearch" placeholder="Search clients..." style="flex:1; max-width:360px; padding:10px 12px; border:1px solid var(--border); border-radius:10px" />
+        </div>
+        <div class="card">
+          <table class="table" id="clientsTable">
+            <thead><tr><th>Name</th><th>Contact</th><th>Address</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <dialog id="clientDialog">
+          <form method="dialog" class="form" id="clientForm">
+            <h3 id="clientDialogTitle">New Client</h3>
+            <input type="hidden" id="clientId" />
+            <label>Name<input id="clientName" required></label>
+            <label>Email<input id="clientEmail" type="email"></label>
+            <label>Phone<input id="clientPhone"></label>
+            <label>Address<input id="clientAddress"></label>
+            <label>Notes<textarea id="clientNote" rows="3"></textarea></label>
+            <div style="display:flex; gap:8px; justify-content:flex-end">
+              <button class="btn ghost" value="cancel">Cancel</button>
+              <button class="btn primary" id="saveClientBtn" value="default">Save</button>
+            </div>
+          </form>
+        </dialog>
       `;
 
-      document.getElementById('results').appendChild(studentResult);
-      document.getElementById('results').style.display = 'block';
+      const tbody = el.querySelector('#clientsTable tbody');
+      const searchEl = el.querySelector('#clientSearch');
+      function renderRows() {
+        const q = (searchEl.value || '').toLowerCase();
+        const filtered = state.clients.filter(c => !q || Object.values(c).join(' ').toLowerCase().includes(q));
+        tbody.innerHTML = filtered.map(c => `
+          <tr>
+            <td><a href="#/client/${c.id}">${c.name}</a></td>
+            <td>${[c.email, c.phone].filter(Boolean).join(' • ') || '-'}</td>
+            <td>${c.address || '-'}</td>
+            <td style="text-align:right">
+              <button class="btn ghost small" data-edit="${c.id}">Edit</button>
+            </td>
+          </tr>
+        `).join('');
+        tbody.querySelectorAll('button[data-edit]').forEach(btn => btn.addEventListener('click', () => openClientDialog(btn.dataset.edit)));
+      }
+      searchEl.addEventListener('input', renderRows);
+      renderRows();
 
-      // Clear inputs
-      document.querySelectorAll('#portal input').forEach(input => input.value = '');
+      const dialog = el.querySelector('#clientDialog');
+      function openClientDialog(editId) {
+        el.querySelector('#clientDialogTitle').textContent = editId ? 'Edit Client' : 'New Client';
+        if (editId) {
+          const c = getClientById(editId);
+          el.querySelector('#clientId').value = c.id;
+          el.querySelector('#clientName').value = c.name || '';
+          el.querySelector('#clientEmail').value = c.email || '';
+          el.querySelector('#clientPhone').value = c.phone || '';
+          el.querySelector('#clientAddress').value = c.address || '';
+          el.querySelector('#clientNote').value = c.note || '';
+        } else {
+          el.querySelector('#clientForm').reset();
+          el.querySelector('#clientId').value = '';
+        }
+        dialog.showModal();
+      }
+      el.querySelector('#btnAddClient').addEventListener('click', () => openClientDialog());
+      dialog.addEventListener('close', () => { /* no-op */ });
+      el.querySelector('#clientForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const id = el.querySelector('#clientId').value || uid();
+        const client = {
+          id,
+          name: el.querySelector('#clientName').value.trim(),
+          email: el.querySelector('#clientEmail').value.trim(),
+          phone: el.querySelector('#clientPhone').value.trim(),
+          address: el.querySelector('#clientAddress').value.trim(),
+          note: el.querySelector('#clientNote').value.trim()
+        };
+        const idx = state.clients.findIndex(c => c.id === id);
+        if (idx >= 0) state.clients[idx] = client; else state.clients.push(client);
+        saveData(state);
+        dialog.close();
+        toast('Client saved');
+        renderRows();
+      });
+    }
+
+    function renderClientProfile(clientId) {
+      const c = getClientById(clientId);
+      if (!c) { location.hash = '#/clients'; return; }
+      const projects = getClientProjects(clientId);
+      const el = document.getElementById('view-clients');
+      el.innerHTML = `
+        <div style="display:flex; gap:12px; align-items:center; margin-bottom:12px">
+          <a class="btn ghost" href="#/clients">Back</a>
+          <div style="font-weight:800; font-size:1.2rem">${c.name}</div>
+          <span class="badge">${projects.length} project${projects.length!==1?'s':''}</span>
+          <div class="spacer"></div>
+          <button class="btn" id="editClient">Edit</button>
+        </div>
+        <div class="cards">
+          <div class="card">
+            <div style="font-weight:700; margin-bottom:8px">Client Details</div>
+            <div>Email: ${c.email || '-'}</div>
+            <div>Phone: ${c.phone || '-'}</div>
+            <div>Address: ${c.address || '-'}</div>
+            <div>Notes: ${c.note || '-'}</div>
+          </div>
+          <div class="card">
+            <div style="font-weight:700; margin-bottom:8px">Projects</div>
+            ${projects.map(p => `
+              <div class="card" style="margin-bottom:8px">
+                <div style="font-weight:700">${p.name}</div>
+                <div>${p.location || '-'} • ${p.startDate || '?'} → ${p.endDate || '?'} • ${humanDuration(p.startDate, p.endDate)}</div>
+              </div>
+            `).join('') || '<div>No projects yet</div>'}
+          </div>
+        </div>
+      `;
+      el.querySelector('#editClient').addEventListener('click', () => { location.hash = '#/clients'; setTimeout(() => {
+        const elList = document.getElementById('view-clients');
+        const btn = elList.querySelector(`button[data-edit="${c.id}"]`);
+        if (btn) btn.click();
+      }, 50); });
+    }
+
+    // ---------------------- Projects ----------------------
+    function renderProjects() {
+      const el = document.getElementById('view-projects');
+      el.innerHTML = `
+        <div style="display:flex; gap:12px; align-items:center; margin-bottom:12px">
+          <button class="btn primary" id="btnAddProject">Add Project</button>
+          <input id="projectSearch" placeholder="Search projects..." style="flex:1; max-width:360px; padding:10px 12px; border:1px solid var(--border); border-radius:10px" />
+        </div>
+        <div class="card">
+          <table class="table" id="projectsTable">
+            <thead><tr><th>Name</th><th>Client</th><th>Location</th><th>Duration</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <dialog id="projectDialog">
+          <form method="dialog" class="form" id="projectForm">
+            <h3 id="projectDialogTitle">New Project</h3>
+            <input type="hidden" id="projectId" />
+            <label>Project Name<input id="projectName" required></label>
+            <label>Client
+              <select id="projectClient" required>
+                <option value="">Select client</option>
+                ${state.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+              </select>
+            </label>
+            <label>Location<input id="projectLocation"></label>
+            <div class="row cols-2">
+              <label>Start Date<input id="projectStart" type="date" required></label>
+              <label>End Date<input id="projectEnd" type="date" required></label>
+            </div>
+            <div id="projectDuration" class="badge"></div>
+            <div style="display:flex; gap:8px; justify-content:flex-end">
+              <button class="btn ghost" value="cancel">Cancel</button>
+              <button class="btn primary" id="saveProjectBtn" value="default">Save</button>
+            </div>
+          </form>
+        </dialog>
+      `;
+
+      const tbody = el.querySelector('#projectsTable tbody');
+      const searchEl = el.querySelector('#projectSearch');
+      function renderRows() {
+        const q = (searchEl.value || '').toLowerCase();
+        const filtered = state.projects.filter(p => !q || Object.values(p).join(' ').toLowerCase().includes(q));
+        tbody.innerHTML = filtered.map(p => {
+          const client = getClientById(p.clientId);
+          const dur = humanDuration(p.startDate, p.endDate);
+          return `
+            <tr>
+              <td>${p.name}</td>
+              <td>${client ? client.name : '-'}</td>
+              <td>${p.location || '-'}</td>
+              <td>${p.startDate || '?'} → ${p.endDate || '?'} <span class="badge">${dur}</span></td>
+              <td style="text-align:right"><button class="btn ghost small" data-edit="${p.id}">Edit</button></td>
+            </tr>
+          `;
+        }).join('');
+        tbody.querySelectorAll('button[data-edit]').forEach(btn => btn.addEventListener('click', () => openProjectDialog(btn.dataset.edit)));
+      }
+      searchEl.addEventListener('input', renderRows);
+      renderRows();
+
+      const dialog = el.querySelector('#projectDialog');
+      function openProjectDialog(editId) {
+        el.querySelector('#projectDialogTitle').textContent = editId ? 'Edit Project' : 'New Project';
+        // refresh client options in case of newly added clients
+        el.querySelector('#projectClient').innerHTML = `<option value="">Select client</option>${state.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}`;
+        if (editId) {
+          const p = state.projects.find(pr => pr.id === editId);
+          el.querySelector('#projectId').value = p.id;
+          el.querySelector('#projectName').value = p.name || '';
+          el.querySelector('#projectClient').value = p.clientId || '';
+          el.querySelector('#projectLocation').value = p.location || '';
+          el.querySelector('#projectStart').value = p.startDate || '';
+          el.querySelector('#projectEnd').value = p.endDate || '';
+          updateDuration();
+        } else {
+          el.querySelector('#projectForm').reset();
+          el.querySelector('#projectId').value = '';
+          el.querySelector('#projectDuration').textContent = '';
+        }
+        dialog.showModal();
+      }
+      el.querySelector('#btnAddProject').addEventListener('click', () => openProjectDialog());
+      function updateDuration() {
+        const s = el.querySelector('#projectStart').value;
+        const e = el.querySelector('#projectEnd').value;
+        el.querySelector('#projectDuration').textContent = (s && e) ? 'Duration: ' + humanDuration(s, e) : '';
+      }
+      el.querySelector('#projectStart').addEventListener('input', updateDuration);
+      el.querySelector('#projectEnd').addEventListener('input', updateDuration);
+
+      el.querySelector('#projectForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const id = el.querySelector('#projectId').value || uid();
+        const project = {
+          id,
+          name: el.querySelector('#projectName').value.trim(),
+          clientId: el.querySelector('#projectClient').value,
+          location: el.querySelector('#projectLocation').value.trim(),
+          startDate: el.querySelector('#projectStart').value,
+          endDate: el.querySelector('#projectEnd').value
+        };
+        if (!project.clientId) { alert('Please select a client.'); return; }
+        const idx = state.projects.findIndex(p => p.id === id);
+        if (idx >= 0) state.projects[idx] = project; else state.projects.push(project);
+        saveData(state);
+        dialog.close();
+        toast('Project saved');
+        renderRows();
+      });
+    }
+
+    // ---------------------- Settings ----------------------
+    function renderSettings() {
+      const el = document.getElementById('view-settings');
+      el.innerHTML = `
+        <div class="card">
+          <div class="form">
+            <label>Company Name<input id="settingsCompany" value="${state.settings.companyName || ''}"></label>
+            <label>Accent Color<input id="settingsAccent" type="color" value="${state.settings.accent || '#d32f2f'}"></label>
+            <label style="display:flex; gap:8px; align-items:center">
+              <input id="settingsShowWeeks" type="checkbox" ${state.settings.showWeeks ? 'checked' : ''} />
+              Show duration in weeks
+            </label>
+            <div style="display:flex; gap:8px; margin-top:8px">
+              <button class="btn primary" id="saveSettings">Save Settings</button>
+              <button class="btn ghost" id="exportData">Export Data</button>
+              <label class="btn ghost" for="importFile">Import Data</label>
+              <input id="importFile" type="file" accept="application/json" style="display:none"/>
+              <button class="btn ghost" id="resetData">Reset</button>
+            </div>
+          </div>
+        </div>
+      `;
+      el.querySelector('#saveSettings').addEventListener('click', () => {
+        state.settings.companyName = el.querySelector('#settingsCompany').value.trim() || 'Koffman Investment Limited';
+        state.settings.accent = el.querySelector('#settingsAccent').value || '#d32f2f';
+        state.settings.showWeeks = el.querySelector('#settingsShowWeeks').checked;
+        saveData(state);
+        applyTheme();
+        toast('Settings saved');
+      });
+      el.querySelector('#exportData').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'koffman-cms-export.json'; a.click();
+        URL.revokeObjectURL(url);
+      });
+      el.querySelector('#importFile').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text);
+          if (!data.clients || !data.projects) throw new Error('Invalid file');
+          state = { ...loadData(), ...data, settings: { ...loadData().settings, ...data.settings } };
+          saveData(state);
+          applyTheme();
+          toast('Data imported');
+          location.hash = '#/dashboard';
+          navigate();
+        } catch (err) {
+          alert('Failed to import: ' + err.message);
+        } finally {
+          e.target.value = '';
+        }
+      });
+      el.querySelector('#resetData').addEventListener('click', () => {
+        if (!confirm('Reset all data? This cannot be undone.')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        state = loadData();
+        saveData(state);
+        applyTheme();
+        toast('Data reset');
+        location.hash = '#/dashboard';
+        navigate();
+      });
+    }
+
+    // ---------------------- Global Search Bridge ----------------------
+    const globalSearch = document.getElementById('globalSearch');
+    if (globalSearch) {
+      globalSearch.addEventListener('input', (e) => {
+        const q = (e.target.value || '').toLowerCase();
+        const onProjects = location.hash.includes('#/projects');
+        if (onProjects) {
+          const input = document.querySelector('#view-projects #projectSearch');
+          if (input) input.value = q, input.dispatchEvent(new Event('input'));
+        } else {
+          const input = document.querySelector('#view-clients #clientSearch');
+          if (input) input.value = q, input.dispatchEvent(new Event('input'));
+        }
+      });
     }
   </script>
-
 </body>
 </html>
